@@ -7,6 +7,95 @@ var utils = {
     'random' : function (gridSize) {
         return Math.floor((Math.random() * gridSize));
     },
+    
+    // Return an array of positions around the position specified
+    'getProximityPositions' : function (grid, x, y) {
+        var checkLeft = x > 0;
+        var checkRight = x < grid.length - 1;
+        var checkTop = y > 0;
+        var checkBottom = y < grid[0].length - 1;
+        
+        var positions = [];
+        var positionsIndex = 0;
+
+        if (checkLeft) {
+            
+            positions[positionsIndex] = {
+                'x' : x - 1,
+                'y' : y
+            }
+            positionsIndex++;
+            
+            if (checkTop) {
+                positions[positionsIndex] = {
+                    'x' : x - 1,
+                    'y' : y - 1
+                }
+                positionsIndex++;
+            }
+            if (checkBottom) {
+                positions[positionsIndex] = {
+                    'x' : x - 1,
+                    'y' : y + 1
+                }
+                positionsIndex++;
+            }
+        }
+        
+        if (checkRight) {
+            
+            positions[positionsIndex] = {
+                'x' : x + 1,
+                'y' : y
+            }
+            positionsIndex++;
+            
+            if (checkTop) {
+                positions[positionsIndex] = {
+                    'x' : x + 1,
+                    'y' : y - 1
+                }
+                positionsIndex++;
+            }
+            if (checkBottom) {
+                positions[positionsIndex] = {
+                    'x' : x + 1,
+                    'y' : y + 1
+                }
+                positionsIndex++;
+            }
+        }
+        
+        if (checkTop) {
+            positions[positionsIndex] = {
+                'x' : x,
+                'y' : y - 1
+            }
+            positionsIndex++;
+        }
+        
+        if (checkBottom) {
+            positions[positionsIndex] = {
+                'x' : x,
+                'y' : y + 1
+            }
+            positionsIndex++;
+        }
+        
+        return positions;
+    },
+    
+    // Return the number of bombs in the grid, on the positions specified
+    'getBombsAround' : function (grid, proximityPositions) {
+        var i;
+        var bombs = 0;
+        for (i = 0; i < proximityPositions.length; i++) {
+            if (grid[proximityPositions[i]['x']][proximityPositions[i]['y']].bomb) {
+                bombs++;
+            }
+        }
+        return bombs;
+    }
 };
 
 var coordenates = {
@@ -48,6 +137,16 @@ var gameLogic = {
         }
     },
     
+    // Fill proximity numbers around bombs
+    'fillProximityNumbers' : function () {
+        var i, j;
+        for (i = 0; i < gridSize; i++) {
+            for (j = 0; j < gridSize; j++) {
+                gameLogic.grid[i][j]['number'] = utils.getBombsAround(gameLogic.grid, utils.getProximityPositions(gameLogic.grid, i, j));
+            }
+        }
+    },
+    
     //Init bomb locations
     //TODO Init proximity values around bombs
     'setupGrid' : function () {
@@ -83,6 +182,8 @@ var gameLogic = {
         for (i = 0; i < bombNumber; i++) {
             gameLogic.grid[bombCoords[i]['x']][bombCoords[i]['y']].bomb = true;
         }
+        
+        gameLogic.fillProximityNumbers();
     },
     
     // For testing purposes, print the grid on an alert
@@ -95,7 +196,7 @@ var gameLogic = {
                 if (gameLogic.grid[i][j].bomb) {
                     text += 'X ';
                 } else {
-                    text += 'O ';
+                    text += gameLogic.grid[i][j].number + ' ';
                 }
             }
             text += '\n';
